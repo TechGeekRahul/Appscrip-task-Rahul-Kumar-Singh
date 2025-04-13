@@ -83,6 +83,11 @@ export function ProductCard({ product }) {
         <button 
           className="absolute right-3 top-3 w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-500 hover:text-secondary"
           aria-label="Add to wishlist"
+          onClick={(e) => {
+            // Stop event propagation to prevent card click
+            e.stopPropagation();
+            console.log("Add to wishlist");
+          }}
         >
           <i className="far fa-heart"></i>
         </button>
@@ -112,6 +117,11 @@ export function ProductCard({ product }) {
           <button 
             className="text-secondary hover:text-secondary/80"
             aria-label="Add to cart"
+            onClick={(e) => {
+              // Stop event propagation to prevent card click
+              e.stopPropagation();
+              console.log("Add to cart");
+            }}
           >
             <i className="fas fa-shopping-cart"></i>
           </button>

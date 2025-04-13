@@ -84,6 +84,8 @@ export function FilterSidebar({
   
   // Toggle color selection 
   const toggleColor = (colorName) => {
+    console.log("Toggling color:", colorName);
+    
     setLocalFilters(prev => {
       const colors = [...prev.colors];
       const index = colors.indexOf(colorName);
@@ -93,6 +95,8 @@ export function FilterSidebar({
       } else {
         colors.push(colorName);
       }
+      
+      console.log("Updated colors:", colors);
       
       return {
         ...prev,

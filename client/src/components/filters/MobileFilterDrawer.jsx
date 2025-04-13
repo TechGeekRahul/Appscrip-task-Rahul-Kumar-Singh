@@ -94,6 +94,8 @@ export function MobileFilterDrawer({
   
   // Toggle color selection
   const toggleColor = (colorName) => {
+    console.log("Mobile - Toggling color:", colorName);
+    
     setLocalFilters(prev => {
       const colors = [...prev.colors];
       const index = colors.indexOf(colorName);
@@ -103,6 +105,8 @@ export function MobileFilterDrawer({
       } else {
         colors.push(colorName);
       }
+      
+      console.log("Mobile - Updated colors:", colors);
       
       return {
         ...prev,

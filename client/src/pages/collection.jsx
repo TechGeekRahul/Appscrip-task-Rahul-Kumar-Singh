@@ -57,12 +57,30 @@ export default function Collection() {
           // Simulate size availability based on product id
           // In a real app, this would use actual size data from the API
           const availableSizes = [];
-          if (product.id % 2 === 0) availableSizes.push("S", "M", "L");
-          if (product.id % 3 === 0) availableSizes.push("XS", "XL");
-          if (product.id % 5 === 0) availableSizes.push("XXL");
+          
+          // Assign sizes based on product ID
+          if (product.id % 2 === 0) {
+            availableSizes.push("S", "M", "L");
+          }
+          if (product.id % 3 === 0) {
+            availableSizes.push("XS", "XL");
+          }
+          if (product.id % 5 === 0) {
+            availableSizes.push("XXL");
+          }
+          
+          // If no sizes were assigned, add some default sizes
+          if (availableSizes.length === 0) {
+            availableSizes.push("M");
+            if (product.id % 3 === 1) availableSizes.push("S");
+            if (product.id % 3 === 2) availableSizes.push("L");
+          }
+          
+          console.log(`Product ${product.id} has sizes:`, availableSizes);
           
           // Check if any of the selected sizes are available for this product
-          return filters.sizes.some(size => availableSizes.includes(size));
+          const result = filters.sizes.some(size => availableSizes.includes(size));
+          return result;
         })
         // Apply color filter (simulated since FakeStore API doesn't have color data)
         .filter(product => {
@@ -72,13 +90,34 @@ export default function Collection() {
           // Simulate color availability based on product id
           // In a real app, this would use actual color data from the API
           const availableColors = [];
-          if (product.id % 2 === 0) availableColors.push("Black", "White");
-          if (product.id % 3 === 0) availableColors.push("Red", "Blue");
-          if (product.id % 5 === 0) availableColors.push("Green");
-          if (product.id % 7 === 0) availableColors.push("Yellow", "Purple", "Pink");
+          
+          // Assign colors based on product ID 
+          if (product.id % 2 === 0) {
+            availableColors.push("Black", "White");
+          }
+          if (product.id % 3 === 0) {
+            availableColors.push("Red", "Blue");
+          }
+          if (product.id % 5 === 0) {
+            availableColors.push("Green");
+          }
+          if (product.id % 7 === 0) {
+            availableColors.push("Yellow", "Purple", "Pink");
+          }
+          
+          // If no colors were assigned, add some default colors
+          if (availableColors.length === 0) {
+            availableColors.push("Black");
+            if (product.id % 4 === 1) availableColors.push("White");
+            if (product.id % 4 === 2) availableColors.push("Blue");
+            if (product.id % 4 === 3) availableColors.push("Red");
+          }
+          
+          console.log(`Product ${product.id} has colors:`, availableColors);
           
           // Check if any of the selected colors are available for this product
-          return filters.colors.some(color => availableColors.includes(color));
+          const result = filters.colors.some(color => availableColors.includes(color));
+          return result;
         })
         // Apply sorting
         .sort((a, b) => {
@@ -110,6 +149,7 @@ export default function Collection() {
   
   // Handle filter changes
   const handleFiltersChange = (newFilters) => {
+    console.log("Collection - Received new filters:", newFilters);
     setFilters(newFilters);
   };
   
