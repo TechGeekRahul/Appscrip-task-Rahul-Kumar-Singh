@@ -49,6 +49,37 @@ export default function Collection() {
           product.price >= filters.priceRange.min && 
           product.price <= filters.priceRange.max
         )
+        // Apply size filter (simulated since FakeStore API doesn't have size data)
+        .filter(product => {
+          // Skip filtering if no sizes are selected
+          if (filters.sizes.length === 0) return true;
+          
+          // Simulate size availability based on product id
+          // In a real app, this would use actual size data from the API
+          const availableSizes = [];
+          if (product.id % 2 === 0) availableSizes.push("S", "M", "L");
+          if (product.id % 3 === 0) availableSizes.push("XS", "XL");
+          if (product.id % 5 === 0) availableSizes.push("XXL");
+          
+          // Check if any of the selected sizes are available for this product
+          return filters.sizes.some(size => availableSizes.includes(size));
+        })
+        // Apply color filter (simulated since FakeStore API doesn't have color data)
+        .filter(product => {
+          // Skip filtering if no colors are selected
+          if (filters.colors.length === 0) return true;
+          
+          // Simulate color availability based on product id
+          // In a real app, this would use actual color data from the API
+          const availableColors = [];
+          if (product.id % 2 === 0) availableColors.push("Black", "White");
+          if (product.id % 3 === 0) availableColors.push("Red", "Blue");
+          if (product.id % 5 === 0) availableColors.push("Green");
+          if (product.id % 7 === 0) availableColors.push("Yellow", "Purple", "Pink");
+          
+          // Check if any of the selected colors are available for this product
+          return filters.colors.some(color => availableColors.includes(color));
+        })
         // Apply sorting
         .sort((a, b) => {
           switch (sortOption) {

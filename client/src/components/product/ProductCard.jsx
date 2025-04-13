@@ -2,7 +2,15 @@ import { Link } from "wouter";
 
 export function ProductCard({ product }) {
   // Generate SEO-friendly URL
-  const productUrl = `/products/${product.title.toLowerCase().replace(/\s+/g, '-')}`;
+  const productUrl = `/products/${product.id}-${product.title.toLowerCase().replace(/\s+/g, '-')}`;
+  
+  // Handle click event
+  const handleCardClick = (e) => {
+    // Only navigate if the click wasn't on a button or link
+    if (!e.target.closest('button') && !e.target.closest('a')) {
+      window.location.href = productUrl;
+    }
+  };
   
   // Format product rating for display
   const renderRating = (rating) => {
@@ -47,8 +55,11 @@ export function ProductCard({ product }) {
   const altText = `${product.title} - ${product.category}`;
   
   return (
-    <div className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <Link href={productUrl} className="block relative pb-[125%] overflow-hidden">
+    <div 
+      className="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
+      <div className="block relative pb-[125%] overflow-hidden">
         <img 
           src={product.image} 
           alt={altText} 
@@ -75,11 +86,11 @@ export function ProductCard({ product }) {
         >
           <i className="far fa-heart"></i>
         </button>
-      </Link>
+      </div>
       
       <div className="p-4">
-        <h3 className="text-sm font-medium mb-1 text-primary">
-          <Link href={productUrl} className="hover:text-secondary">{displayTitle}</Link>
+        <h3 className="text-sm font-medium mb-1 text-primary hover:text-secondary">
+          {displayTitle}
         </h3>
         
         {/* Ratings */}
