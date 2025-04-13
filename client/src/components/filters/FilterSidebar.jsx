@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RangeSlider } from "@/components/ui/range-slider";
 
 export function FilterSidebar({
@@ -9,18 +9,32 @@ export function FilterSidebar({
   onApply
 }) {
   // Local state to track current filter selections
-  const [localFilters, setLocalFilters] = useState(filters);
+  const [localFilters, setLocalFilters] = useState({...filters});
+  const isFirstRender = useRef(true);
+  const prevFiltersRef = useRef(filters);
   
-  // Update local filters when props change
+  // Update local filters when props change significantly
   useEffect(() => {
-    setLocalFilters(filters);
-  }, [
-    filters.categories.length,
-    filters.priceRange.min,
-    filters.priceRange.max,
-    filters.sizes.length,
-    filters.colors.length
-  ]);
+    // Skip the first render to avoid double initialization
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevFiltersRef.current = filters;
+      return;
+    }
+    
+    // Check if filters have changed significantly from previous props
+    const prevFilters = prevFiltersRef.current;
+    const categoriesChanged = filters.categories.length !== prevFilters.categories.length;
+    const priceMinChanged = Math.abs(filters.priceRange.min - prevFilters.priceRange.min) > 1;
+    const priceMaxChanged = Math.abs(filters.priceRange.max - prevFilters.priceRange.max) > 1;
+    const sizesChanged = filters.sizes.length !== prevFilters.sizes.length;
+    const colorsChanged = filters.colors.length !== prevFilters.colors.length;
+    
+    if (categoriesChanged || priceMinChanged || priceMaxChanged || sizesChanged || colorsChanged) {
+      setLocalFilters({...filters});
+      prevFiltersRef.current = filters;
+    }
+  }, [filters]);
   
   // Toggle category selection
   const toggleCategory = (category) => {
@@ -64,6 +78,25 @@ export function FilterSidebar({
       return {
         ...prev,
         sizes
+      };
+    });
+  };
+  
+  // Toggle color selection 
+  const toggleColor = (colorName) => {
+    setLocalFilters(prev => {
+      const colors = [...prev.colors];
+      const index = colors.indexOf(colorName);
+      
+      if (index > -1) {
+        colors.splice(index, 1);
+      } else {
+        colors.push(colorName);
+      }
+      
+      return {
+        ...prev,
+        colors
       };
     });
   };
@@ -171,23 +204,7 @@ export function FilterSidebar({
                     ? 'border-secondary focus:ring-2 focus:ring-offset-2 focus:ring-secondary' 
                     : 'border-gray-300 focus:outline-none'
                 }`}
-                onClick={() => {
-                  setLocalFilters(prev => {
-                    const colors = [...prev.colors];
-                    const index = colors.indexOf(color.name);
-                    
-                    if (index > -1) {
-                      colors.splice(index, 1);
-                    } else {
-                      colors.push(color.name);
-                    }
-                    
-                    return {
-                      ...prev,
-                      colors
-                    };
-                  });
-                }}
+                onClick={() => toggleColor(color.name)}
                 aria-label={`Filter by ${color.name} color`}
               />
             ))}

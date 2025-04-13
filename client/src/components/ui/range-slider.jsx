@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function RangeSlider({ 
   min, 
@@ -7,43 +7,55 @@ export function RangeSlider({
   value, 
   onChange 
 }) {
-  const [localValues, setLocalValues] = useState(value);
+  const [localMin, setLocalMin] = useState(value.min);
+  const [localMax, setLocalMax] = useState(value.max);
   const [dragging, setDragging] = useState(null);
+  const isFirstRender = useRef(true);
   
   const range = max - min;
   
   // Calculate percentages for slider positions
-  const minPos = ((localValues.min - min) / range) * 100;
-  const maxPos = ((localValues.max - min) / range) * 100;
+  const minPos = ((localMin - min) / range) * 100;
+  const maxPos = ((localMax - min) / range) * 100;
   
-  // Update local values when props change
+  // Update local values when props change significantly
   useEffect(() => {
-    setLocalValues(value);
-  }, [value.min, value.max]); // Added specific dependencies to avoid infinite updates
+    // Skip during first render since it will cause double initialization
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    // Only update if the external values are different enough to avoid update loops
+    const minDiff = Math.abs(localMin - value.min);
+    const maxDiff = Math.abs(localMax - value.max);
+    
+    if (minDiff > 1 || maxDiff > 1) {
+      setLocalMin(value.min);
+      setLocalMax(value.max);
+    }
+  }, [value.min, value.max]);
   
   // Commit changes to parent when dragging stops
   useEffect(() => {
-    if (dragging === null && 
-        (localValues.min !== value.min || localValues.max !== value.max)) {
-      onChange(localValues);
+    if (dragging === null && !isFirstRender.current) {
+      // Avoid redundant updates
+      if (Math.abs(localMin - value.min) > 0.01 || Math.abs(localMax - value.max) > 0.01) {
+        onChange({ min: localMin, max: localMax });
+      }
     }
-  }, [dragging, localValues, onChange, value.min, value.max]);
+  }, [dragging]);
   
-  // Handle slider thumb movements
-  const handleSliderChange = (e, type) => {
+  // Handle min slider change
+  const handleMinChange = (e) => {
     const newValue = Number(e.target.value);
-    
-    if (type === 'min') {
-      setLocalValues(prev => ({
-        ...prev,
-        min: Math.min(newValue, prev.max - step)
-      }));
-    } else {
-      setLocalValues(prev => ({
-        ...prev,
-        max: Math.max(newValue, prev.min + step)
-      }));
-    }
+    setLocalMin(Math.min(newValue, localMax - step));
+  };
+  
+  // Handle max slider change
+  const handleMaxChange = (e) => {
+    const newValue = Number(e.target.value);
+    setLocalMax(Math.max(newValue, localMin + step));
   };
 
   return (
@@ -60,17 +72,15 @@ export function RangeSlider({
         min={min}
         max={max}
         step={step}
-        value={localValues.min}
-        onChange={(e) => handleSliderChange(e, 'min')}
+        value={localMin}
+        onChange={handleMinChange}
         onMouseDown={() => setDragging('min')}
         onMouseUp={() => setDragging(null)}
         onTouchStart={() => setDragging('min')}
         onTouchEnd={() => setDragging(null)}
         className="absolute w-full h-1 -top-1 appearance-none bg-transparent pointer-events-none"
         style={{
-          // Only the thumb should be clickable to avoid interference between sliders
           pointerEvents: 'auto',
-          // Hide the track
           WebkitAppearance: 'none',
         }}
       />
@@ -80,24 +90,22 @@ export function RangeSlider({
         min={min}
         max={max}
         step={step}
-        value={localValues.max}
-        onChange={(e) => handleSliderChange(e, 'max')}
+        value={localMax}
+        onChange={handleMaxChange}
         onMouseDown={() => setDragging('max')}
         onMouseUp={() => setDragging(null)}
         onTouchStart={() => setDragging('max')}
         onTouchEnd={() => setDragging(null)}
         className="absolute w-full h-1 -top-1 appearance-none bg-transparent pointer-events-none"
         style={{
-          // Only the thumb should be clickable to avoid interference between sliders
           pointerEvents: 'auto',
-          // Hide the track
           WebkitAppearance: 'none',
         }}
       />
       
       <div className="flex justify-between mt-4">
-        <div className="text-sm font-medium">${localValues.min}</div>
-        <div className="text-sm font-medium">${localValues.max}</div>
+        <div className="text-sm font-medium">${localMin}</div>
+        <div className="text-sm font-medium">${localMax}</div>
       </div>
     </div>
   );

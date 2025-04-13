@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { RangeSlider } from "@/components/ui/range-slider";
 
 export function MobileFilterDrawer({
@@ -10,18 +10,32 @@ export function MobileFilterDrawer({
   onReset
 }) {
   // Local state to track current filter selections
-  const [localFilters, setLocalFilters] = useState(filters);
+  const [localFilters, setLocalFilters] = useState({...filters});
+  const isFirstRender = useRef(true);
+  const prevFiltersRef = useRef(filters);
   
-  // Update local filters when props change
+  // Update local filters when props change significantly
   useEffect(() => {
-    setLocalFilters(filters);
-  }, [
-    filters.categories.length,
-    filters.priceRange.min,
-    filters.priceRange.max,
-    filters.sizes.length,
-    filters.colors.length
-  ]);
+    // Skip the first render to avoid double initialization
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      prevFiltersRef.current = filters;
+      return;
+    }
+    
+    // Check if filters have changed significantly from previous props
+    const prevFilters = prevFiltersRef.current;
+    const categoriesChanged = filters.categories.length !== prevFilters.categories.length;
+    const priceMinChanged = Math.abs(filters.priceRange.min - prevFilters.priceRange.min) > 1;
+    const priceMaxChanged = Math.abs(filters.priceRange.max - prevFilters.priceRange.max) > 1;
+    const sizesChanged = filters.sizes.length !== prevFilters.sizes.length;
+    const colorsChanged = filters.colors.length !== prevFilters.colors.length;
+    
+    if (categoriesChanged || priceMinChanged || priceMaxChanged || sizesChanged || colorsChanged) {
+      setLocalFilters({...filters});
+      prevFiltersRef.current = filters;
+    }
+  }, [filters]);
   
   // Apply filters and close drawer
   const applyFilters = () => {
@@ -59,6 +73,44 @@ export function MobileFilterDrawer({
     });
   };
   
+  // Toggle size selection
+  const toggleSize = (size) => {
+    setLocalFilters(prev => {
+      const sizes = [...prev.sizes];
+      const index = sizes.indexOf(size);
+      
+      if (index > -1) {
+        sizes.splice(index, 1);
+      } else {
+        sizes.push(size);
+      }
+      
+      return {
+        ...prev,
+        sizes
+      };
+    });
+  };
+  
+  // Toggle color selection
+  const toggleColor = (colorName) => {
+    setLocalFilters(prev => {
+      const colors = [...prev.colors];
+      const index = colors.indexOf(colorName);
+      
+      if (index > -1) {
+        colors.splice(index, 1);
+      } else {
+        colors.push(colorName);
+      }
+      
+      return {
+        ...prev,
+        colors
+      };
+    });
+  };
+  
   // Available sizes
   const availableSizes = ["XS", "S", "M", "L", "XL", "XXL"];
   
@@ -79,6 +131,14 @@ export function MobileFilterDrawer({
     if (e.target === e.currentTarget) {
       onClose();
     }
+  };
+  
+  // Handle price range change
+  const handlePriceRangeChange = (priceRange) => {
+    setLocalFilters(prev => ({
+      ...prev,
+      priceRange
+    }));
   };
   
   return (
@@ -125,7 +185,7 @@ export function MobileFilterDrawer({
                 max={1000}
                 step={5}
                 value={localFilters.priceRange}
-                onChange={(priceRange) => setLocalFilters(prev => ({ ...prev, priceRange }))}
+                onChange={handlePriceRangeChange}
               />
             </div>
             
@@ -141,23 +201,7 @@ export function MobileFilterDrawer({
                         ? 'border-secondary text-secondary' 
                         : 'border-gray-300 hover:border-secondary hover:text-secondary'
                     } rounded-md py-1 text-sm`}
-                    onClick={() => {
-                      setLocalFilters(prev => {
-                        const sizes = [...prev.sizes];
-                        const index = sizes.indexOf(size);
-                        
-                        if (index > -1) {
-                          sizes.splice(index, 1);
-                        } else {
-                          sizes.push(size);
-                        }
-                        
-                        return {
-                          ...prev,
-                          sizes
-                        };
-                      });
-                    }}
+                    onClick={() => toggleSize(size)}
                   >
                     {size}
                   </button>
@@ -177,23 +221,7 @@ export function MobileFilterDrawer({
                         ? 'border-secondary focus:ring-2 focus:ring-offset-2 focus:ring-secondary' 
                         : 'border-gray-300 focus:outline-none'
                     }`}
-                    onClick={() => {
-                      setLocalFilters(prev => {
-                        const colors = [...prev.colors];
-                        const index = colors.indexOf(color.name);
-                        
-                        if (index > -1) {
-                          colors.splice(index, 1);
-                        } else {
-                          colors.push(color.name);
-                        }
-                        
-                        return {
-                          ...prev,
-                          colors
-                        };
-                      });
-                    }}
+                    onClick={() => toggleColor(color.name)}
                     aria-label={`Filter by ${color.name} color`}
                   />
                 ))}
